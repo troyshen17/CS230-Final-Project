@@ -137,21 +137,19 @@ class CycleGAN:
         """
 
         ### ADDED L1 LOSS ###
-        l1_regularizer = tf.contrib.layers.l1_regularizer(scale=0.005, scope=None)
-        weights = tf.trainable_variables() # all vars of our graph
-        regularization_penalty = tf.contrib.layers.apply_regularization(l1_regularizer, weights)
+        # l1_regularizer = tf.contrib.layers.l1_regularizer(scale=0.005, scope=None)
+        # weights = tf.trainable_variables() # all vars of our graph
+        # regularization_penalty = tf.contrib.layers.apply_regularization(l1_regularizer, weights)
         ### ADDED L1 LOSS ###
 
         cycle_consistency_loss_a = \
             self._lambda_a * losses.cycle_consistency_loss(
                 real_images=self.input_a, generated_images=self.cycle_images_a, 
-            ) + \
-            regularization_penalty # Added L1 Loss
+            ) 
         cycle_consistency_loss_b = \
             self._lambda_b * losses.cycle_consistency_loss(
                 real_images=self.input_b, generated_images=self.cycle_images_b,
-            ) + \
-            regularization_penalty # Added L1 Loss
+            ) 
 
         lsgan_loss_a = losses.lsgan_loss_generator(self.prob_fake_a_is_real)
         lsgan_loss_b = losses.lsgan_loss_generator(self.prob_fake_b_is_real)
