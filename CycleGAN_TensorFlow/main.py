@@ -8,6 +8,7 @@ import random
 import imageio
 import click
 import tensorflow as tf
+from tqdm import tqdm
 
 from . import cyclegan_datasets
 from . import data_loader, losses, model
@@ -199,8 +200,8 @@ class CycleGAN:
         with open(os.path.join(
                 self._output_dir, 'epoch_' + str(epoch) + '.html'
         ), 'w') as v_html:
-            for i in range(0, self._num_imgs_to_save):
-                print("Saving image {}/{}".format(i, self._num_imgs_to_save))
+            for i in tqdm(range(0, self._num_imgs_to_save), desc='Saving image '):
+                # print("Saving image {}/{}".format(i, self._num_imgs_to_save))
                 inputs = sess.run(self.inputs)
                 fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = sess.run([
                     self.fake_images_a,
@@ -267,9 +268,12 @@ class CycleGAN:
                 tf.local_variables_initializer())
         saver = tf.train.Saver()
 
+        sess_config = tf.ConfigProto(allow_soft_placement=True)
+        sess_config.gpu_options.allow_growth = True
+
         max_images = cyclegan_datasets.DATASET_TO_SIZES[self._dataset_name]
 
-        with tf.Session() as sess:
+        with tf.Session(config=sess_config) as sess:
             sess.run(init)
             decay = self._lambda_a.eval() / (self._max_step + 1e-1)
 
@@ -303,8 +307,8 @@ class CycleGAN:
 
                 self.save_images(sess, epoch)
 
-                for i in range(0, max_images):
-                    print("Processing batch {}/{}".format(i, max_images))
+                for i in tqdm(range(0, max_images), desc='Training '):
+                    # print("Processing batch {}/{}".format(i, max_images))
 
                     inputs = sess.run(self.inputs)
 
