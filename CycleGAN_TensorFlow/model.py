@@ -96,7 +96,7 @@ def build_resnet_block(inputres, dim, name="resnet", padding="REFLECT"):
         return tf.nn.relu(out_res + inputres)
 
 
-def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=False):
+def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=True):
     with tf.variable_scope(name):
         f = 7
         ks = 3
@@ -138,6 +138,7 @@ def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=False):
 
         if skip is True:
             out_gen = tf.nn.tanh(inputgen + o_c6, "t1")
+            print("Skip is True")
         else:
             out_gen = tf.nn.tanh(o_c6, "t1")
 
@@ -186,6 +187,7 @@ def build_generator_resnet_9blocks(inputgen, name="generator", skip=False):
 
         if skip is True:
             out_gen = tf.nn.tanh(inputgen + o_c6, "t1")
+            print("Skip is True")
         else:
             out_gen = tf.nn.tanh(o_c6, "t1")
 
