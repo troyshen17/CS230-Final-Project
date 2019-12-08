@@ -141,6 +141,7 @@ def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=True):
             print("Skip is True")
         else:
             out_gen = tf.nn.tanh(o_c6, "t1")
+            print("Skip is False")
 
         return out_gen
 
@@ -190,6 +191,7 @@ def build_generator_resnet_9blocks(inputgen, name="generator", skip=False):
             print("Skip is True")
         else:
             out_gen = tf.nn.tanh(o_c6, "t1")
+            print("Skip is False")
 
         return out_gen
 
