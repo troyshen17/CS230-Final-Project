@@ -8,6 +8,7 @@ import random
 import imageio
 import click
 import tensorflow as tf
+from tqdm import tqdm
 
 from . import cyclegan_datasets
 from . import data_loader, losses, model
@@ -26,8 +27,12 @@ class CycleGAN:
 
         self._pool_size = pool_size
         self._size_before_crop = 286
-        self._lambda_a = lambda_a
-        self._lambda_b = lambda_b
+        # self._lambda_b = lambda_b
+        self._lambda_a = tf.get_variable('lambda_a', shape=[], dtype=type(lambda_a),
+                            initializer=tf.constant_initializer(lambda_a), trainable=False)
+        # self._lambda_b = lambda_b
+        self._lambda_b = tf.get_variable('lambda_b', shape=[], dtype=type(lambda_b),
+                            initializer=tf.constant_initializer(lambda_b), trainable=False)
         self._output_dir = os.path.join(output_root_dir, current_time)
         self._images_dir = os.path.join(self._output_dir, 'imgs')
         self._num_imgs_to_save = 20
@@ -195,8 +200,8 @@ class CycleGAN:
         with open(os.path.join(
                 self._output_dir, 'epoch_' + str(epoch) + '.html'
         ), 'w') as v_html:
-            for i in range(0, self._num_imgs_to_save):
-                print("Saving image {}/{}".format(i, self._num_imgs_to_save))
+            for i in tqdm(range(0, self._num_imgs_to_save), desc='Saving image '):
+                # print("Saving image {}/{}".format(i, self._num_imgs_to_save))
                 inputs = sess.run(self.inputs)
                 fake_A_temp, fake_B_temp, cyc_A_temp, cyc_B_temp = sess.run([
                     self.fake_images_a,
@@ -263,10 +268,14 @@ class CycleGAN:
                 tf.local_variables_initializer())
         saver = tf.train.Saver()
 
+        sess_config = tf.ConfigProto(allow_soft_placement=True)
+        sess_config.gpu_options.allow_growth = True
+
         max_images = cyclegan_datasets.DATASET_TO_SIZES[self._dataset_name]
 
-        with tf.Session() as sess:
+        with tf.Session(config=sess_config) as sess:
             sess.run(init)
+            decay = self._lambda_a.eval() / (self._max_step + 1e-1)
 
             # Restore the model to run the model from last checkpoint
             if self._to_restore:
@@ -284,6 +293,8 @@ class CycleGAN:
             # Training Loop
             for epoch in range(sess.run(self.global_step), self._max_step):
                 print("In the epoch ", epoch)
+                print('lambda_a: {}'.format(self._lambda_a.eval()))
+                print('lambda_b: {}'.format(self._lambda_b.eval()))
                 saver.save(sess, os.path.join(
                     self._output_dir, "cyclegan"), global_step=epoch)
 
@@ -296,8 +307,8 @@ class CycleGAN:
 
                 self.save_images(sess, epoch)
 
-                for i in range(0, max_images):
-                    print("Processing batch {}/{}".format(i, max_images))
+                for i in tqdm(range(0, max_images), desc='Training '):
+                    # print("Processing batch {}/{}".format(i, max_images))
 
                     inputs = sess.run(self.inputs)
 
@@ -367,8 +378,11 @@ class CycleGAN:
 
                     writer.flush()
                     self.num_fake_inputs += 1
+                    break
 
                 sess.run(tf.assign(self.global_step, epoch + 1))
+                sess.run(tf.assign_sub(self._lambda_a, decay))
+                sess.run(tf.assign_sub(self._lambda_b, decay))
 
             coord.request_stop()
             coord.join(threads)
