@@ -26,8 +26,12 @@ class CycleGAN:
 
         self._pool_size = pool_size
         self._size_before_crop = 286
-        self._lambda_a = lambda_a
-        self._lambda_b = lambda_b
+        # self._lambda_b = lambda_b
+        self._lambda_a = tf.get_variable('lambda_a', shape=[], dtype=type(lambda_a),
+                            initializer=tf.constant_initializer(lambda_a), trainable=False)
+        # self._lambda_b = lambda_b
+        self._lambda_b = tf.get_variable('lambda_b', shape=[], dtype=type(lambda_b),
+                            initializer=tf.constant_initializer(lambda_b), trainable=False)
         self._output_dir = os.path.join(output_root_dir, current_time)
         self._images_dir = os.path.join(self._output_dir, 'imgs')
         self._num_imgs_to_save = 20
@@ -267,6 +271,7 @@ class CycleGAN:
 
         with tf.Session() as sess:
             sess.run(init)
+            decay = self._lambda_a.eval() / (self._max_step + 1e-1)
 
             # Restore the model to run the model from last checkpoint
             if self._to_restore:
@@ -284,6 +289,8 @@ class CycleGAN:
             # Training Loop
             for epoch in range(sess.run(self.global_step), self._max_step):
                 print("In the epoch ", epoch)
+                print('lambda_a: {}'.format(self._lambda_a.eval()))
+                print('lambda_b: {}'.format(self._lambda_b.eval()))
                 saver.save(sess, os.path.join(
                     self._output_dir, "cyclegan"), global_step=epoch)
 
@@ -367,8 +374,11 @@ class CycleGAN:
 
                     writer.flush()
                     self.num_fake_inputs += 1
+                    break
 
                 sess.run(tf.assign(self.global_step, epoch + 1))
+                sess.run(tf.assign_sub(self._lambda_a, decay))
+                sess.run(tf.assign_sub(self._lambda_b, decay))
 
             coord.request_stop()
             coord.join(threads)
