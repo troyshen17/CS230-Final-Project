@@ -96,7 +96,7 @@ def build_resnet_block(inputres, dim, name="resnet", padding="REFLECT"):
         return tf.nn.relu(out_res + inputres)
 
 
-def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=False):
+def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=True):
     with tf.variable_scope(name):
         f = 7
         ks = 3
@@ -120,6 +120,11 @@ def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=False):
         o_r7 = build_resnet_block(o_r6, ngf * 4, "r7", padding)
         o_r8 = build_resnet_block(o_r7, ngf * 4, "r8", padding)
         o_r9 = build_resnet_block(o_r8, ngf * 4, "r9", padding)
+        ### ADDED ARCHITECTURE ###
+        o_r10 = build_resnet_block(o_r6, ngf * 4, "r10", padding)
+        o_r11 = build_resnet_block(o_r7, ngf * 4, "r11", padding)
+        o_r12 = build_resnet_block(o_r8, ngf * 4, "r12", padding)
+        ### ADDED ARCHITECTURE ###
 
         o_c4 = layers.general_deconv2d(
             o_r9, [BATCH_SIZE, 128, 128, ngf * 2], ngf * 2, ks, ks, 2, 2, 0.02,
@@ -133,8 +138,10 @@ def build_generator_resnet_9blocks_tf(inputgen, name="generator", skip=False):
 
         if skip is True:
             out_gen = tf.nn.tanh(inputgen + o_c6, "t1")
+            print("Skip is True")
         else:
             out_gen = tf.nn.tanh(o_c6, "t1")
+            print("Skip is False")
 
         return out_gen
 
@@ -163,6 +170,11 @@ def build_generator_resnet_9blocks(inputgen, name="generator", skip=False):
         o_r7 = build_resnet_block(o_r6, ngf * 4, "r7", padding)
         o_r8 = build_resnet_block(o_r7, ngf * 4, "r8", padding)
         o_r9 = build_resnet_block(o_r8, ngf * 4, "r9", padding)
+        ### ADDED ARCHITECTURE ###
+        o_r10 = build_resnet_block(o_r6, ngf * 4, "r10", padding)
+        o_r11 = build_resnet_block(o_r7, ngf * 4, "r11", padding)
+        o_r12 = build_resnet_block(o_r8, ngf * 4, "r12", padding)
+        ### ADDED ARCHITECTURE ###
 
         o_c4 = layers.general_deconv2d(
             o_r9, [BATCH_SIZE, 128, 128, ngf * 2], ngf * 2, ks, ks, 2, 2, 0.02,
@@ -176,8 +188,10 @@ def build_generator_resnet_9blocks(inputgen, name="generator", skip=False):
 
         if skip is True:
             out_gen = tf.nn.tanh(inputgen + o_c6, "t1")
+            print("Skip is True")
         else:
             out_gen = tf.nn.tanh(o_c6, "t1")
+            print("Skip is False")
 
         return out_gen
 
